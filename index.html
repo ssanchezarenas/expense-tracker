@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contador de Gastos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 28px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #222;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: #999;
+        }
+
+        .month-selector {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+
+        .month-selector button {
+            background: white;
+            border: 2px solid #e8e8e8;
+            padding: 10px 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.2s;
+            min-width: 70px;
+            text-align: center;
+        }
+
+        .month-selector button:active {
+            transform: scale(0.95);
+        }
+
+        .month-selector button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35);
+        }
+
+        .month-selector button:hover:not(.active) {
+            border-color: #667eea;
+        }
+
+        .budget-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 28px;
+            border-radius: 18px;
+            text-align: center;
+            margin-bottom: 28px;
+            transition: all 0.3s ease;
+        }
+
+        .budget-display.negative {
+            background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%);
+        }
+
+        .budget-label {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .budget-amount {
+            font-size: 52px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            letter-spacing: -1px;
+        }
+
+        .budget-total {
+            font-size: 13px;
+            opacity: 0.85;
+            margin-bottom: 18px;
+        }
+
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.3);
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 18px;
+        }
+
+        .progress-fill {
+            background: white;
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.3s ease;
+        }
+
+        .spent-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            font-size: 12px;
+        }
+
+        .spent-info div {
+            text-align: center;
+            opacity: 0.9;
+        }
+
+        .spent-info strong {
+            display: block;
+            font-size: 18px;
+            margin-top: 4px;
+        }
+
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            text-align: center;
+            display: none;
+            border: 1px solid #ffc107;
+        }
+
+        .warning.show {
+            display: block;
+        }
+
+        .warning.critical {
+            background: #ffebee;
+            color: #d32f2f;
+            border-color: #f44336;
+        }
+
+        .input-section {
+            margin-bottom: 28px;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 90px 1fr;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        input[type="number"],
+        input[type="text"] {
+            padding: 14px;
+            border: 2px solid #e8e8e8;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+            font-family: inherit;
+        }
+
+        input[type="text"] {
+            grid-column: 1 / -1;
+        }
+
+        input[type="number"]:focus,
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .btn {
+            padding: 14px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            grid-column: 2;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-add:active {
+            transform: scale(0.95);
+        }
+
+        .btn-reset {
+            background: #f5f5f5;
+            color: #333;
+            width: 100%;
+            margin-top: 12px;
+        }
+
+        .btn-reset:active {
+            background: #efefef;
+        }
+
+        .transactions {
+            margin-top: 28px;
+        }
+
+        .transactions h2 {
+            font-size: 15px;
+            color: #222;
+            margin-bottom: 16px;
+            font-weight: 700;
+        }
+
+        .transaction-list {
+            max-height: 380px;
+            overflow-y: auto;
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 14px;
+            background: #f9f9f9;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            gap: 12px;
+        }
+
+        .transaction-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .transaction-amount {
+            color: #d32f2f;
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 6px;
+        }
+
+        .transaction-comment {
+            color: #555;
+            font-size: 13px;
+            margin-bottom: 6px;
+            word-break: break-word;
+            font-weight: 500;
+        }
+
+        .transaction-time {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .transaction-delete {
+            background: #ffcdd2;
+            color: #d32f2f;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .transaction-delete:active {
+            background: #ef9a9a;
+            transform: scale(0.95);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #ccc;
+            padding: 30px 20px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 520px) {
+            .container {
+                padding: 20px;
+                border-radius: 20px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .budget-amount {
+                font-size: 44px;
+            }
+
+            .month-selector button {
+                min-width: 65px;
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+
+            .input-row {
+                grid-template-columns: 80px 1fr;
+            }
+
+            .transaction-item {
+                padding: 12px;
+            }
+        }
+
+        /* Scrollbar styling */
+        .transaction-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .transaction-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .transaction-list::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 10px;
+        }
+
+        .transaction-list::-webkit-scrollbar-thumb:hover {
+            background: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 Presupuesto Mensual</h1>
+            <p id="currentMonthName"></p>
+        </div>
+
+        <div class="month-selector" id="monthSelector"></div>
+
+        <div class="warning" id="warningMessage50">
+            ⚠️ ¡Has gastado el 50% del presupuesto!
+        </div>
+
+        <div class="warning critical" id="warningMessage30">
+            ⚠️ ¡Solo te queda el 10%! Has gastado el 90%
+        </div>
+
+        <div class="budget-display" id="budgetDisplay">
+            <div class="budget-label">SALDO DISPONIBLE</div>
+            <div class="budget-amount" id="remainingAmount">600,00€</div>
+            <div class="budget-total">
+                Gastado: <span id="spentAmount">0,00</span>€ de 600,00€
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="spent-info">
+                <div>
+                    Disponible<br>
+                    <strong id="percentRemaining">100%</strong>
+                </div>
+                <div>
+                    Gastado<br>
+                    <strong id="percentSpent">0%</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-section">
+            <div class="input-row">
+                <input 
+                    type="number" 
+                    id="expenseAmount" 
+                    placeholder="0,00" 
+                    step="0.01"
+                    min="0"
+                >
+                <button class="btn btn-add" onclick="addExpense()">Añadir</button>
+            </div>
+            <input 
+                type="text" 
+                id="expenseComment" 
+                placeholder="Descripción (opcional)"
+            >
+            <button class="btn btn-reset" onclick="resetMonth()">Reiniciar mes</button>
+        </div>
+
+        <div class="transactions">
+            <h2>📋 Gastos del mes</h2>
+            <div class="transaction-list" id="transactionList">
+                <div class="empty-state">Sin gastos aún</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BUDGET = 600;
+        const STORAGE_PREFIX = 'expenses_';
+
+        function getCurrentMonth() {
+            const now = new Date();
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        }
+
+        function getMonthName(yearMonth) {
+            const [year, month] = yearMonth.split('-');
+            const date = new Date(year, parseInt(month) - 1);
+            return date.toLocaleString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase();
+        }
+
+        function getMonthShort(yearMonth) {
+            const [year, month] = yearMonth.split('-');
+            const date = new Date(year, parseInt(month) - 1);
+            return date.toLocaleString('es-ES', { month: 'short', year: '2-digit' }).toUpperCase();
+        }
+
+        function loadExpenses(month) {
+            const stored = localStorage.getItem(STORAGE_PREFIX + month);
+            return stored ? JSON.parse(stored) : [];
+        }
+
+        function saveExpenses(month, expenses) {
+            localStorage.setItem(STORAGE_PREFIX + month, JSON.stringify(expenses));
+        }
+
+        function formatCurrency(amount) {
+            return amount.toFixed(2).replace('.', ',') + '€';
+        }
+
+        function formatDate(date) {
+            return new Date(date).toLocaleString('es-ES', {
+                day: 'numeric',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function initializeMonthSelector() {
+            const selector = document.getElementById('monthSelector');
+            const currentMonth = getCurrentMonth();
+            
+            let months = [];
+            for (let i = 11; i >= 0; i--) {
+                const date = new Date();
+                date.setMonth(date.getMonth() - i);
+                const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                months.push(month);
+            }
+
+            selector.innerHTML = months.map(month => `
+                <button onclick="selectMonth('${month}')" class="${month === currentMonth ? 'active' : ''}">
+                    ${getMonthShort(month)}
+                </button>
+            `).join('');
+        }
+
+        let selectedMonth = getCurrentMonth();
+
+        function selectMonth(month) {
+            selectedMonth = month;
+            document.querySelectorAll('.month-selector button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            const expenses = loadExpenses(selectedMonth);
+            const spent = expenses.reduce((sum, e) => sum + e.amount, 0);
+            const remaining = BUDGET - spent;
+
+            // Actualizar título del mes
+            document.getElementById('currentMonthName').textContent = getMonthName(selectedMonth);
+
+            // Actualizar montos
+            document.getElementById('remainingAmount').textContent = formatCurrency(remaining);
+            document.getElementById('spentAmount').textContent = formatCurrency(spent);
+
+            // Actualizar color del saldo
+            const budgetDisplay = document.getElementById('budgetDisplay');
+            if (remaining < 0) {
+                budgetDisplay.classList.add('negative');
+            } else {
+                budgetDisplay.classList.remove('negative');
+            }
+
+            // Actualizar porcentajes
+            const percentSpent = Math.round((spent / BUDGET) * 100);
+            const percentRemaining = Math.max(0, 100 - percentSpent);
+
+            document.getElementById('percentSpent').textContent = percentSpent + '%';
+            document.getElementById('percentRemaining').textContent = percentRemaining + '%';
+
+            // Actualizar barra de progreso
+            let progressWidth = Math.min(percentSpent, 100);
+            document.getElementById('progressFill').style.width = progressWidth + '%';
+
+            // Mostrar advertencias
+            const warning50 = document.getElementById('warningMessage50');
+            const warning30 = document.getElementById('warningMessage30');
+
+            warning50.classList.remove('show');
+            warning30.classList.remove('show');
+
+            if (percentSpent >= 50 && percentSpent < 90) {
+                warning50.classList.add('show');
+            } else if (percentSpent >= 90) {
+                warning30.classList.add('show');
+            }
+
+            // Actualizar lista de transacciones
+            updateTransactionList(expenses);
+        }
+
+        function updateTransactionList(expenses) {
+            const list = document.getElementById('transactionList');
+
+            if (expenses.length === 0) {
+                list.innerHTML = '<div class="empty-state">Sin gastos aún</div>';
+                return;
+            }
+
+            const sorted = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            list.innerHTML = sorted.map((expense, index) => `
+                <div class="transaction-item">
+                    <div class="transaction-content">
+                        <div class="transaction-amount">${formatCurrency(expense.amount)}</div>
+                        ${expense.comment ? `<div class="transaction-comment">${expense.comment}</div>` : ''}
+                        <div class="transaction-time">${formatDate(expense.date)}</div>
+                    </div>
+                    <button class="transaction-delete" onclick="deleteExpense(${index})">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function addExpense() {
+            const amountInput = document.getElementById('expenseAmount');
+            const commentInput = document.getElementById('expenseComment');
+            const amount = parseFloat(amountInput.value);
+
+            if (!amountInput.value || amount <= 0) {
+                amountInput.focus();
+                return;
+            }
+
+            const expenses = loadExpenses(selectedMonth);
+            expenses.push({
+                amount: amount,
+                comment: commentInput.value.trim(),
+                date: new Date().toISOString()
+            });
+
+            saveExpenses(selectedMonth, expenses);
+            amountInput.value = '';
+            commentInput.value = '';
+            amountInput.focus();
+            updateDisplay();
+        }
+
+        function deleteExpense(index) {
+            const expenses = loadExpenses(selectedMonth);
+            const sorted = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
+            const expenseToDelete = sorted[index];
+            
+            const realIndex = expenses.findIndex(e => 
+                e.amount === expenseToDelete.amount && e.date === expenseToDelete.date
+            );
+
+            expenses.splice(realIndex, 1);
+            saveExpenses(selectedMonth, expenses);
+            updateDisplay();
+        }
+
+        function resetMonth() {
+            if (confirm(`¿Reiniciar el mes? Se eliminarán todos los gastos.`)) {
+                localStorage.removeItem(STORAGE_PREFIX + selectedMonth);
+                document.getElementById('expenseAmount').value = '';
+                document.getElementById('expenseComment').value = '';
+                updateDisplay();
+            }
+        }
+
+        document.getElementById('expenseAmount').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addExpense();
+            }
+        });
+
+        document.getElementById('expenseComment').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addExpense();
+            }
+        });
+
+        initializeMonthSelector();
+        updateDisplay();
+    </script>
+</body>
+</html>
